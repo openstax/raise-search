@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-api
+  labels:
+    app: {{ .Chart.Name }}-api
+spec:
+  replicas: {{ .Values.apiReplicas }}
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-api
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-api
+    spec:
+      serviceAccountName: raise-search
+      containers:
+        - name: {{ .Chart.Name }}-api
+          image: {{ .Values.searchImage.name }}:{{ .Values.searchImage.tag }}
+          command: ["uvicorn", "raise_search.api.main:app", "--host", "0.0.0.0", "--port", "80", "--timeout-keep-alive", "120"]
+          imagePullPolicy: Always
+          env:
+            - name: OPENSEARCH_HOST_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Chart.Name }}
+                  key: opensearchHostEndpoint
+          ports:
+            - containerPort: 80
