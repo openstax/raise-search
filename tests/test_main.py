@@ -6,9 +6,45 @@ from raise_search.api.utils import get_opensearch_client
 client = TestClient(app)
 
 
+def create_mock_response():
+    mock_response = {
+        "took": 5,
+        "timed_out": False,
+        "hits": {
+            "total": {"value": 1},
+            "hits": [
+                {
+                    "_index": "test-index2",
+                    "_id": "1",
+                    "_score": 0.5,
+                    "_source": {
+                        "content_id": "1",
+                        "section": "section1",
+                        "activity_name": "Activity 1",
+                        "lesson_page": "page1",
+                        "lesson_page_type": "type1",
+                        "teacher_only": True,
+                        "visible_content": ["ahahha"]
+                    },
+                    "highlight": {
+                        "visible_content": ["text"],
+                        "lesson_page": ["page"],
+                        "activity_name": ["activity"],
+                    },
+                },
+            ],
+            "max_score": 1.0,
+        },
+    }
+    return mock_response
+
+
 @pytest.fixture
 def mock_opensearch_client():
-    return MagicMock()
+    mock_client = MagicMock()
+    mock_response = create_mock_response()
+    mock_client.search.return_value = mock_response
+    return mock_client
 
 
 def test_search_v1(mock_opensearch_client):
