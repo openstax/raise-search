@@ -1,5 +1,8 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from raise_search.api import utils
+import enum
+from raise_search.api.models import SearchResults
 
 app = FastAPI(title="RAISE Search API")
 
@@ -11,15 +14,22 @@ app.add_middleware(
 )
 
 
+class FilterOptions(str, enum.Enum):
+    TEACHER = 'teacher'
+    STUDENT = 'student'
+
+
 @app.get("/v1/search")
 def search_v1(
     q: str = Query(..., title="Query string", description="The search query"),
-    version: str = Query(..., title="Version", description="API version"),
-    filter: str = Query(None, title="Filter",
-                        description="Filter by 'student' or 'teacher'"),
-):
+    version: str = Query(..., title="Version", description="Content version"),
+    filter: FilterOptions = Query(
+        None, title="Filter", description="Filter by 'student' or 'teacher'"
+    ),
+    client=Depends(utils.get_opensearch_client),
+) -> SearchResults :
     teacher_only = False
-    if filter and filter == "teacher":
+    if filter == FilterOptions.TEACHER.value:
         teacher_only = True
 
     search_api_query = {
@@ -33,7 +43,7 @@ def search_v1(
             "post_tags": ["</strong>"],
         },
         "query": {},
-        "size": 100
+        "size": 100,
     }
 
     if filter is None:
@@ -41,23 +51,25 @@ def search_v1(
             "simple_query_string": {
                 "query": q,
                 "fields": ["visible_content", "lesson_page", "activity_name"],
-                "default_operator": "AND"
+                "default_operator": "AND",
             }
         }
     else:
         search_api_query["query"] = {
             "bool": {
-                "filter": {
-                    "term": {"teacher_only": teacher_only}
-                },
+                "filter": {"term": {"teacher_only": teacher_only}},
                 "must": {
                     "simple_query_string": {
                         "query": q,
                         "fields": ["visible_content", "lesson_page", "activity_name"],
-                        "default_operator": "AND"
+                        "default_operator": "AND",
                     }
-                }
+                },
             }
         }
 
-    return search_api_query
+    search_results = client.search(index="test-index2", body=search_api_query)
+    for hit in search_results["hits"]["hits"]:
+        del hit["_source"]["visible_content"]
+
+    return search_results

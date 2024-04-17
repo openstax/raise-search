@@ -6,12 +6,6 @@ This repo includes an API and tools to support search capabilities in RAISE.
 
 The repo includes a `docker` environment which can be launched as follows:
 
-Set environment variables:
-
-```bash
-$ export OPENSEARCH_INITIAL_ADMIN_PASSWORD=<password>
-```
-
 Start containers:
 
 ```bash
