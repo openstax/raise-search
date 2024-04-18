@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class HitSource(BaseModel):
@@ -18,21 +18,33 @@ class HitHighlight(BaseModel):
 
 
 class Hit(BaseModel):
-    _index: str
-    _id: str
-    _score: float
-    _source: HitSource
+    index: str = Field(..., alias="_index")
+    id: str = Field(..., alias="_id")
+    score: float = Field(..., alias="_score")
+    source: HitSource = Field(..., alias="_source")
     highlight: Optional[HitHighlight]
 
 
+class HitTotal(BaseModel):
+    value: int
+    relation: str
+
+
 class Hits(BaseModel):
-    total: dict
+    total: HitTotal
     hits: List[Hit]
     max_score: Optional[float]
+
+
+class ShardData(BaseModel):
+    total: int
+    successful: int
+    skipped: int
+    failed: int
 
 
 class SearchResults(BaseModel):
     took: int
     timed_out: bool
-    _shards: dict
+    shards: ShardData = Field(..., alias="_shards")
     hits: Hits

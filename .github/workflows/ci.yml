@@ -25,5 +25,7 @@ jobs:
         run: pip install .[test]
       - name: Lint
         run: flake8
-      - name: Pytest
-        run: pytest
+      - name: Test
+        run: pytest --cov-report=term --cov-report=xml --cov=raise_search
+      - name: Upload Code Coverage
+        uses: codecov/codecov-action@v3
