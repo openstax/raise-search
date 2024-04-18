@@ -28,7 +28,7 @@ def create_mock_response():
                         "lesson_page": "page1",
                         "lesson_page_type": "type1",
                         "teacher_only": True,
-                        "visible_content": ["content"]
+                        "visible_content": ["content"],
                     },
                     "highlight": {
                         "visible_content": ["text"],

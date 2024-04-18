@@ -24,7 +24,7 @@ Once running, the application components can be accessed at the following URLs:
 * API (docs): [http://localhost:9400/docs](http://localhost:9400/docs)
 * OpenSearch (health): [https://localhost:9200/_cat/health?v](https://localhost:9200/_cat/health?v)
 
-Default Opensearch credentials:
+Default OpenSearch credentials:
 
 ```bash
 user = admin
