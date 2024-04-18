@@ -1,0 +1,6 @@
+deploymentDomain:
+searchImage:
+  name: <account>.dkr.ecr.<region>.amazonaws.com/raise-search
+  tag: sha
+opensearchHostEndpoint:
+apiReplicas: 2
