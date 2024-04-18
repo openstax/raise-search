@@ -69,12 +69,11 @@ def search_v1(
         }
 
     try:
-        search_results = client.search(index=f"content-{version}",
-                                       body=search_api_query)
+        search_results = client.search(
+            index=f"content-{version}", body=search_api_query
+        )
     except NotFoundError:
         raise HTTPException(status_code=404, detail="Content version not found")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
     for hit in search_results["hits"]["hits"]:
         del hit["_source"]["visible_content"]

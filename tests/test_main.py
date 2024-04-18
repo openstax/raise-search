@@ -1,3 +1,4 @@
+from opensearchpy import NotFoundError
 import pytest
 from fastapi.testclient import TestClient
 from raise_search.api.main import app
@@ -52,14 +53,52 @@ def mock_opensearch_client(mocker):
 
 
 def test_search_v1(mock_opensearch_client, test_client):
-    client = TestClient(app)
 
     app.dependency_overrides[get_opensearch_client] = lambda: mock_opensearch_client
 
     test_query = "test query"
     test_version = "1"
 
-    response = client.get(f"/v1/search?q={test_query}&version={test_version}")
+    response = test_client.get(f"/v1/search?q={test_query}&version={test_version}")
+    data = response.json()
+
+    assert "took" in data
+    assert "timed_out" in data
+    assert "_shards" in data
+    assert "hits" in data
+
+    hits = data["hits"]
+    assert "total" in hits
+    assert "hits" in hits
+
+    total_hits = hits["total"]
+    assert "value" in total_hits
+    assert "relation" in total_hits
+
+    assert "max_score" in hits
+
+    first_hit = hits["hits"][0]
+    assert "_index" in first_hit
+    assert "_id" in first_hit
+    assert "_score" in first_hit
+    assert "_source" in first_hit
+    assert "highlight" in first_hit
+
+    highlight = first_hit["highlight"]
+    assert "visible_content" in highlight
+    assert "lesson_page" in highlight
+    assert "activity_name" in highlight
+    assert "text" in highlight["visible_content"]
+    assert "page" in highlight["lesson_page"]
+    assert "activity" in highlight["activity_name"]
+
+    assert first_hit["_index"] == "content-1"
+    assert first_hit["_id"] == "1"
+    assert first_hit["_score"] == 0.5
+
+    assert first_hit["_source"]["content_id"] == "1"
+    assert first_hit["_source"]["section"] == "section1"
+    assert first_hit["_source"]["activity_name"] == "Activity 1"
 
     assert response.status_code == 200
     mock_opensearch_client.search.assert_called_once_with(
@@ -176,3 +215,19 @@ def test_search_v1_filter_teacher(mock_opensearch_client, test_client):
             "size": 100,
         },
     )
+
+
+def test_search_v1_not_found_error(mock_opensearch_client, test_client):
+    mock_opensearch_client.search.side_effect = NotFoundError
+
+    app.dependency_overrides[get_opensearch_client] = lambda: mock_opensearch_client
+
+    test_query = "query"
+    test_version = "2"
+
+    response = test_client.get(f"/v1/search?q={test_query}&version={test_version}")
+    assert response.status_code == 404
+
+    assert response.json()["detail"] == "Content version not found"
+
+    mock_opensearch_client.search.assert_called_once()
