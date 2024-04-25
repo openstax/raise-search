@@ -16,6 +16,7 @@ def get_opensearch_client():
             verify_certs=True,
             connection_class=RequestsHttpConnection,
             pool_maxsize=20,
+            timeout=15,
         )
     else:
         port = 9200
