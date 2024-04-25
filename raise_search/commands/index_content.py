@@ -6,13 +6,15 @@ from bs4 import BeautifulSoup
 
 
 def index_content(index, toc_csv_path, html_directory):
+    client = get_opensearch_client()
+
     with toc_csv_path.open() as csv_file:
         items = csv.DictReader(csv_file)
         for item in items:
-            index_item(item, index, html_directory)
+            index_item(item, index, html_directory, client)
 
 
-def index_item(item, index, html_directory):
+def index_item(item, index, html_directory, client):
     html_content = Path(
         f"{html_directory}/{item['content_id']}.html").resolve(strict=True).read_text()
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -26,7 +28,6 @@ def index_item(item, index, html_directory):
         "teacher_only": item["visible"] == "0",
         "visible_content": soup.get_text()
     }
-    client = get_opensearch_client()
     client.index(
         index=index,
         body=doc,
