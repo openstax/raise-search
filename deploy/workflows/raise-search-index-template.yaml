@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: raise-search-index-template
+  namespace: raise
+spec:
+  entrypoint: index-content
+  templates:
+  - name: index-content
+    serviceAccountName: raise-search
+    inputs:
+      parameters:
+        - name: version
+    container:
+      image: python:3.10
+      env:
+        - name: OPENSEARCH_HOST_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: raise-search
+              key: opensearchHostEndpoint
+      command:
+        - "bash"
+        - "-cxe"
+        - |
+          git clone https://github.com/openstax/k12-contents-raise.git
+          git -C k12-contents-raise checkout "{{inputs.parameters.version}}"
+          pip install git+https://github.com/openstax/raise-mbtools@main
+          generate-mbz-toc --csv k12-contents-raise/mbz/ toc.csv
+          pip uninstall -y raise-mbtools boto3
+          pip install git+https://github.com/openstax/raise-search@main
+          create-index "content-{{inputs.parameters.version}}"
+          index-content "content-{{inputs.parameters.version}}" toc.csv k12-contents-raise/html/

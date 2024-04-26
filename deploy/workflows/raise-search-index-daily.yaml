@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  generateName: raise-search-index-daily-
+  namespace: raise
+spec:
+  schedule: "0 1 * * *"
+  concurrencyPolicy: "Replace"
+  timezone: America/Chicago
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  workflowSpec:
+    entrypoint: index-latest
+    templates:
+    - name: index-latest
+      serviceAccountName: raise-search
+      container:
+        image: python:3.10
+        env:
+          - name: OPENSEARCH_HOST_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                name: raise-search
+                key: opensearchHostEndpoint
+        command:
+          - "bash"
+          - "-cxe"
+          - |
+            git clone https://github.com/openstax/k12-contents-raise.git
+            pip install git+https://github.com/openstax/raise-mbtools@main
+            generate-mbz-toc --csv k12-contents-raise/mbz/ toc.csv
+            pip uninstall -y raise-mbtools boto3
+            pip install git+https://github.com/openstax/raise-search@main
+            delete-index content-latest
+            create-index content-latest
+            index-content content-latest toc.csv k12-contents-raise/html/
