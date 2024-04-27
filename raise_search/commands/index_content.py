@@ -3,6 +3,10 @@ import csv
 from raise_search.api.utils import get_opensearch_client
 from pathlib import Path
 from bs4 import BeautifulSoup
+from opensearchpy.exceptions import ConnectionTimeout
+
+
+MAX_RETRY_COUNT = 10
 
 
 def index_content(index, toc_csv_path, html_directory):
@@ -31,12 +35,25 @@ def index_item(item, index, html_directory, client):
         "teacher_only": item["visible"] == "0",
         "visible_content": soup.get_text(),
     }
-    client.index(
-        index=index,
-        body=doc,
-        id=doc["content_id"],
-        refresh=True,
-    )
+
+    doc_id = doc["content_id"]
+
+    for attempt in range(1, MAX_RETRY_COUNT + 1):
+        try:
+            client.index(
+                index=index,
+                body=doc,
+                id=doc_id,
+                refresh=True,
+            )
+            break
+        except ConnectionTimeout:
+            if attempt < MAX_RETRY_COUNT:
+                print(f"Timeout {attempt} for ID {doc_id}...retrying")
+                continue
+            else:
+                print(f"Timeout {attempt} for ID {doc_id}...giving up")
+                raise
 
 
 def main():
