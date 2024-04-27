@@ -1,7 +1,5 @@
 import pytest
-from raise_search.commands import delete_index
-from raise_search.commands import create_index
-from raise_search.commands import index_content
+from raise_search.commands import delete_index, create_index, index_content, cat_indices
 from opensearchpy.exceptions import ConnectionTimeout
 
 
@@ -34,6 +32,17 @@ def test_delete_index_main(mock_opensearch_client, mocker):
     delete_index.main()
 
     mock_opensearch_client.indices.delete.assert_called_once_with("test_index_name")
+
+
+def test_cat_indices_main(mock_opensearch_client, mocker):
+    mocker.patch(
+        "raise_search.commands.cat_indices.get_opensearch_client",
+        lambda: mock_opensearch_client,
+    )
+
+    cat_indices.main()
+
+    mock_opensearch_client.cat.indices.assert_called_once_with(v=True)
 
 
 def test_index_item_main(mock_opensearch_client, mocker, tmp_path):
