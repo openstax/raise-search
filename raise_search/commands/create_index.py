@@ -9,7 +9,7 @@ def create_index(index_name):
         "settings": {
             "index": {
                 "number_of_shards": 1,
-                "number_of_replicas": 1
+                "number_of_replicas": 1,
             }
         }
     }
@@ -20,8 +20,10 @@ def create_index(index_name):
 def main():
     parser = argparse.ArgumentParser(description="")
     parser.add_argument(
-        "index_name", type=str,
-        help="opensearch index name")
+        "index_name",
+        type=str,
+        help="opensearch index name",
+    )
 
     args = parser.parse_args()
     index_name = args.index_name

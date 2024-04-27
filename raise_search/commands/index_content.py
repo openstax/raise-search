@@ -15,9 +15,12 @@ def index_content(index, toc_csv_path, html_directory):
 
 
 def index_item(item, index, html_directory, client):
-    html_content = Path(
-        f"{html_directory}/{item['content_id']}.html").resolve(strict=True).read_text()
-    soup = BeautifulSoup(html_content, 'html.parser')
+    html_content = (
+        Path(f"{html_directory}/{item['content_id']}.html")
+        .resolve(strict=True)
+        .read_text()
+    )
+    soup = BeautifulSoup(html_content, "html.parser")
 
     doc = {
         "content_id": item["content_id"],
@@ -26,27 +29,33 @@ def index_item(item, index, html_directory, client):
         "lesson_page": item["lesson_page"],
         "lesson_page_type": item["lesson_page_type"],
         "teacher_only": item["visible"] == "0",
-        "visible_content": soup.get_text()
+        "visible_content": soup.get_text(),
     }
     client.index(
         index=index,
         body=doc,
         id=doc["content_id"],
-        refresh=True
+        refresh=True,
     )
 
 
 def main():
     parser = argparse.ArgumentParser(description="")
     parser.add_argument(
-        "index", type=str,
-        help="opensearch index name")
+        "index",
+        type=str,
+        help="opensearch index name",
+    )
     parser.add_argument(
-        "toc_csv_path", type=str,
-        help="path to toc csv")
+        "toc_csv_path",
+        type=str,
+        help="path to toc csv",
+    )
     parser.add_argument(
-        "html_directory", type=str,
-        help="path to html directory")
+        "html_directory",
+        type=str,
+        help="path to html directory",
+    )
 
     args = parser.parse_args()
     toc_csv_path = Path(args.toc_csv_path).resolve(strict=True)
