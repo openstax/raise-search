@@ -12,7 +12,7 @@ spec:
       parameters:
         - name: version
     container:
-      image: python:3.10
+      image: python:3.12
       env:
         - name: OPENSEARCH_HOST_ENDPOINT
           valueFrom:
