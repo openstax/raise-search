@@ -15,7 +15,7 @@ spec:
     - name: index-latest
       serviceAccountName: raise-search
       container:
-        image: python:3.10
+        image: python:3.12
         env:
           - name: OPENSEARCH_HOST_ENDPOINT
             valueFrom:
