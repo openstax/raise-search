@@ -14,6 +14,8 @@ spec:
     templates:
     - name: index-latest
       serviceAccountName: raise-search
+      retryStrategy:
+        limit: "3"
       container:
         image: python:3.12
         env:
