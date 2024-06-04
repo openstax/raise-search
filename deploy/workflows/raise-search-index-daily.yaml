@@ -14,6 +14,8 @@ spec:
     templates:
     - name: index-latest
       serviceAccountName: raise-search
+      retryStrategy:
+        limit: "3"
       container:
         image: python:3.12
         env:
@@ -31,6 +33,6 @@ spec:
             generate-mbz-toc --csv k12-contents-raise/mbz/ toc.csv
             pip uninstall -y raise-mbtools boto3
             pip install git+https://github.com/openstax/raise-search@main
-            delete-index content-latest
+            delete-index content-latest || true
             create-index content-latest
             index-content content-latest toc.csv k12-contents-raise/html/
